@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { svgs } from "../assets/exports";
-import { useFilterData } from "../hooks/useFilterData";
 import PaginationNextButton from "./PaginationNextButton";
 import PaginationPreviousButton from "./PaginationPreviousButton";
+import PaginationButton from "./PaginationButton";
+import { orderData, ordersPerPage } from "../config/dashboardData";
 
 const DashBoardData = () => {
   const {
@@ -12,19 +13,20 @@ const DashBoardData = () => {
     sortIcon,
     arrowdown,
     infoIcon,
-    leftArrow,
-    rightArrow,
   } = svgs;
-
   const [id, setId] = useState("");
-
   const [sortOptions, setSortOptions] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  
-  const { filterOrders, orders, setOrders } = useFilterData();
-  
-  const ordersPerPage = 30;
-  const filteredOrders = filterOrders(id);
+  const [orders, setOrders] = useState(orderData);
+
+  const filteredOrders = orders.filter((order) => {
+    const hasOrderId = order?.orderID
+      .toString()
+      .toLowerCase()
+      .includes(id.toLowerCase());
+    if (!hasOrderId) return;
+    return hasOrderId;
+  });
 
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const visiblebuttonThreshold = Math.ceil(totalPages / 2); // show only half of the total pagination buttons
@@ -34,17 +36,21 @@ const DashBoardData = () => {
   }
 
   function sortByDate() {
-    setOrders([...filteredOrders].sort((a, b) => new Date(a.orderDate) - new Date(b.orderDate)))
+    setOrders(
+      [...orders].sort(
+        (a, b) => new Date(a.orderDate) - new Date(b.orderDate)
+      )
+    );
   }
 
   function sortByOrderId() {
-    setOrders([...filteredOrders].sort((a, b) => a.orderID - b.orderID))
-    
+    setOrders([...orders].sort((a, b) => a.orderID - b.orderID));
   }
 
   function sortByOrderAmount() {
-    setOrders([...filteredOrders].sort((a, b) => a.orderAmount - b.orderAmount))
-    
+    setOrders(
+      [...orders].sort((a, b) => a.orderAmount - b.orderAmount)
+    );
   }
 
   return (
@@ -100,21 +106,24 @@ const DashBoardData = () => {
 
             {sortOptions && (
               <div className="absolute bg-white top-10 -left-4 z-10 shadow-[0px_2px_6px_0px_#1A181E0A]">
-                <button 
+                <button
                   onClick={() => sortByDate()}
-                  className="py-2 px-4 w-full text-left hover:bg-[#F1F1F1]">
+                  className="py-2 px-4 w-full text-left hover:bg-[#F1F1F1]"
+                >
                   Order date
                 </button>{" "}
                 <br />
-                <button 
-                onClick={() => sortByOrderAmount()}
-                className="py-2 px-4 w-full text-left hover:bg-[#F1F1F1]">
+                <button
+                  onClick={() => sortByOrderAmount()}
+                  className="py-2 px-4 w-full text-left hover:bg-[#F1F1F1]"
+                >
                   Order amount
                 </button>{" "}
                 <br />
-                <button 
-                onClick={() => sortByOrderId()}
-                className="py-2 px-4 w-full text-left hover:bg-[#F1F1F1]">
+                <button
+                  onClick={() => sortByOrderId()}
+                  className="py-2 px-4 w-full text-left hover:bg-[#F1F1F1]"
+                >
                   Order Id
                 </button>{" "}
                 <br />
@@ -200,18 +209,15 @@ const DashBoardData = () => {
         )}
 
         <div className="my-6 w-[610px] mx-auto flex justify-center items-center ">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-            className="h-8 min-w-[100px] border-[1px] border-[#D9D9D9] rounded mr-6 py-[6px] pl-[6px] pr-3 flex justify-center items-center gap-2 bg-searchboxgradient"
-          >
-            <img src={leftArrow} alt="leftArrow" />
-            <span>Previous</span>
-          </button>
+          <PaginationPreviousButton
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+          />
 
           {Array.from({ length: currentPage }).map((_, idx) => {
             return idx + 1 > totalPages - visiblebuttonThreshold ? null : (
-              <PaginationNextButton
+              <PaginationButton
+                setCurrentPage={setCurrentPage}
                 key={idx}
                 idx={idx}
                 currentPage={currentPage}
@@ -223,22 +229,19 @@ const DashBoardData = () => {
 
           {Array.from({ length: totalPages }).map((_, idx) => {
             return idx + 1 <= totalPages - visiblebuttonThreshold ? null : (
-              <PaginationPreviousButton
+              <PaginationButton
+                setCurrentPage={setCurrentPage}
                 key={idx}
                 idx={idx}
                 currentPage={currentPage}
               />
             );
           })}
-
-          <button
-            disabled={totalPages === 0 || currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-            className="h-8 min-w-[74px] border-[1px] border-[#D9D9D9] rounded ml-6 py-[6px] pl-[6px] pr-3 flex justify-center items-center gap-2 bg-searchboxgradient"
-          >
-            <span>Next</span>
-            <img src={rightArrow} alt="rightArrow" />
-          </button>
+          <PaginationNextButton
+            totalPages={totalPages}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+          />
         </div>
       </div>
     </section>

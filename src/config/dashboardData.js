@@ -1,3 +1,4 @@
+export const ordersPerPage = 30;
 export const orderData = [
     {
         "orderID": 281212,
